@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI가 요약하는 하루</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .accessibility-bar {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 50;
+      background-color: #fef3c7;
+      border: 2px solid #facc15;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      padding: 1rem 1.25rem;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-b from-blue-50 to-white min-h-0 text-gray-800 text-[17px]">
+  <div class="max-w-screen-xl mx-auto py-10 px-8">
+    <!-- 헤더 -->
+    <header class="flex flex-col lg:flex-row justify-between items-center mb-10 border-b pb-6">
+      <h1 class="text-4xl font-bold text-blue-900">📘 AI가 요약하는 하루</h1>
+      <div class="mt-6 lg:mt-0 w-full lg:w-auto">
+        <input type="text" placeholder="뉴스 검색..." class="w-full lg:w-80 px-4 py-2 rounded-md border border-gray-300 focus:ring focus:ring-blue-300">
+      </div>
+    </header>
+
+    <!-- 종합 요약 카드 -->
+    <section class="bg-blue-100 border-l-4 border-blue-600 p-6 rounded-xl mb-10 shadow">
+      <h2 class="text-2xl font-semibold text-blue-900 mb-2">📌 오늘의 요약</h2>
+      <p class="text-gray-700 text-lg leading-relaxed">
+        오늘은 전국이 흐리고, 환율은 상승세를 보이며 금리 인상이 주목됩니다. 강풍 주의보와 함께 미세먼지 농도도 높은 편입니다.
+      </p>
+    </section>
+
+    <!-- 날씨 카드 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+      <div class="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-blue-400">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-bold text-blue-700">🌦️ 날씨 정보</h3>
+          <button class="text-sm text-blue-600 hover:underline">AI 요약</button>
+        </div>
+        <p class="text-3xl font-semibold mb-3">18°C</p>
+        <ul class="text-base space-y-1">
+          <li>🌡️ 습도: 80%</li>
+          <li>💨 풍속: 3.5m/s</li>
+          <li>🌬️ 풍향: 북동</li>
+          <li>🌧️ 강수확률: 60%</li>
+        </ul>
+        <p class="mt-3 text-red-600 text-sm font-semibold">⚠️ 강풍주의보</p>
+      </div>
+
+      <!-- 경제 카드 -->
+      <div class="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-green-400">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-bold text-green-700">💰 경제 지표</h3>
+          <button class="text-sm text-green-600 hover:underline">AI 요약</button>
+        </div>
+        <ul class="text-lg space-y-3">
+          <li class="flex justify-between">
+            <span>💱 USD/KRW</span>
+            <span class="text-red-600 font-bold">₩1,467.60 ▲ 3.2</span>
+          </li>
+          <li class="flex justify-between">
+            <span>📊 기준금리</span>
+            <span class="text-blue-600 font-bold">3.50%</span>
+          </li>
+          <li class="flex justify-between">
+            <span>🧾 소비자물가지수</span>
+            <span class="text-red-500 font-bold">+2.8%</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 뉴스 카테고리 -->
+    <div class="flex gap-3 mb-6 flex-wrap">
+      <button onclick="filterCategory('전체')" class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-medium hover:bg-blue-200">전체</button>
+      <button class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-medium hover:bg-blue-200">정치</button>
+      <button class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-medium hover:bg-blue-200">경제</button>
+      <button class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-medium hover:bg-blue-200">사회</button>
+      <button class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-medium hover:bg-blue-200">연예</button>
+      <button class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-medium hover:bg-blue-200">스포츠</button>
+    </div>
+
+    <!-- 뉴스 카드 여러 개 -->
+    <script>
+      function filterCategory(category) {
+        const cards = document.querySelectorAll('[data-category]');
+        cards.forEach(card => {
+          if (category === '전체' || card.dataset.category === category) {
+            card.style.display = 'block';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      }
+    </script>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- 뉴스 카드 예시 -->
+      <div class="bg-white rounded-2xl shadow-md p-6 border-l-4 border-indigo-400" data-category="정치">
+        <h3 class="text-lg font-bold text-indigo-700 mb-2">📰 기준금리 동결…물가 안정 유지</h3>
+        <p class="text-sm text-gray-700">한국은행은 기준금리를 3.5%로 유지한다고 밝혔습니다.</p>
+        <p class="text-xs text-gray-500 mt-2">출처: 연합뉴스 | 신뢰도: ★★★★☆</p>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-md p-6 border-l-4 border-indigo-400" data-category="경제">
+        <h3 class="text-lg font-bold text-indigo-700 mb-2">📰 소비자물가 2.8% 상승</h3>
+        <p class="text-sm text-gray-700">통계청에 따르면 5월 소비자물가지수는 전년 대비 2.8% 상승했습니다.</p>
+        <p class="text-xs text-gray-500 mt-2">출처: 통계청 | 신뢰도: ★★★★☆</p>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-md p-6 border-l-4 border-indigo-400" data-category="사회">
+        <h3 class="text-lg font-bold text-indigo-700 mb-2">📰 환율 상승세 지속</h3>
+        <p class="text-sm text-gray-700">미국의 금리 인상 가능성으로 인해 환율이 다시 상승하고 있습니다.</p>
+        <p class="text-xs text-gray-500 mt-2">출처: 경제신문 | 신뢰도: ★★★★☆</p>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-md p-6 border-l-4 border-indigo-400" data-category="연예">
+        <h3 class="text-lg font-bold text-indigo-700 mb-2">📰 국제유가 하락</h3>
+        <p class="text-sm text-gray-700">WTI 기준 국제유가는 전일 대비 1.2% 하락하며 82달러 선에서 마감했습니다.</p>
+        <p class="text-xs text-gray-500 mt-2">출처: 에너지뉴스 | 신뢰도: ★★★☆☆</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 접근성 설정 (하단 고정) -->
+  <div class="accessibility-bar">
+    <button class="px-3 py-1 bg-yellow-500 text-white rounded-md">글자 작게</button>
+    <button class="px-3 py-1 bg-yellow-600 text-white rounded-md">글자 크게</button>
+  </div>
+</body>
+</html>
