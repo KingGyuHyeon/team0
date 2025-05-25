@@ -6,24 +6,79 @@
   <title>AI가 요약하는 하루</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    .accessibility-bar {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 50;
-      background-color: #fef3c7;
-      border: 2px solid #facc15;
-      border-radius: 0.75rem;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      padding: 1rem 1.25rem;
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
+    .active-category { background-color: #3b82f6; color: white; }
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background-color: rgba(0, 0, 0, 0.4);
+      display: none; align-items: center; justify-content: center;
+      z-index: 50; opacity: 0; transition: opacity 0.3s ease;
+    }
+    .modal-overlay.show { display: flex; opacity: 1; }
+    .modal-content {
+      background: white; padding: 2rem; border-radius: 1rem;
+      width: 90%; max-width: 500px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      animation: popup 0.25s ease-out forwards;
+      position: relative;
+    }
+    @keyframes popup { to { transform: scale(1); } }
+
+    .close-button {
+      position: absolute; top: 1rem; right: 1rem;
+      font-size: 1.1rem; font-weight: bold;
+      color: #1f2937;
+      background: #f3f4f6;
+      padding: 0.25rem 0.75rem;
+      border-radius: 0.375rem;
+      cursor: pointer;
+    }
+
+    .high-contrast {
+      background-color: #000 !important;
+      color: #fff !important;
+    }
+    .high-contrast a {
+      color: #FFD700 !important;
+    }
+    .high-contrast .bg-white,
+    .high-contrast .bg-blue-100,
+    .high-contrast .bg-blue-200,
+    .high-contrast .bg-yellow-500,
+    .high-contrast .bg-yellow-600,
+    .high-contrast .bg-black {
+      background-color: #000 !important;
+      color: #fff !important;
+    }
+    .high-contrast .text-gray-700,
+    .high-contrast .text-gray-500,
+    .high-contrast .text-blue-800,
+    .high-contrast .text-blue-600,
+    .high-contrast .text-green-700,
+    .high-contrast .text-indigo-700 {
+      color: #FFD700 !important;
+    }
+    .high-contrast button {
+      border: 2px solid #FFD700 !important;
+      color: #FFD700 !important;
+      background-color: transparent !important;
+    }
+    .high-contrast input {
+      background-color: #000 !important;
+      color: #FFD700 !important;
+      border: 1px solid #FFD700 !important;
     }
   </style>
 </head>
-<body class="bg-gradient-to-b from-blue-50 to-white min-h-0 text-gray-800 text-[17px]">
-  <div class="max-w-screen-xl mx-auto py-10 px-8">
+<body class="bg-gradient-to-b from-blue-50 to-white text-gray-800 text-[17px]" id="main-body">
+  <!-- 설정 버튼 -->
+  <div id="settings-button" onclick="toggleSettings()">⚙️</div>
+  <div id="settings-menu">
+    <button onclick="changeFontSize(-1)" class="px-3 py-1 bg-yellow-500 text-white rounded mr-2">글자 작게</button>
+    <button onclick="changeFontSize(1)" class="px-3 py-1 bg-yellow-600 text-white rounded mr-2">글자 크게</button>
+    <button onclick="toggleContrast()" class="px-3 py-1 bg-black text-yellow-300 rounded">고대비</button>
+  </div>
+
+  <!-- 이하 본문 전체 포함 -->  <div class="max-w-screen-xl mx-auto py-10 px-8">
     <!-- 헤더 -->
     <header class="flex flex-col lg:flex-row justify-between items-center mb-10 border-b pb-6">
       <h1 class="text-4xl font-bold text-blue-900">📘 AI가 요약하는 하루</h1>
@@ -32,7 +87,7 @@
       </div>
     </header>
 
-    <!-- 종합 요약 카드 -->
+    <!-- 오늘의 요약 카드 -->
     <section class="bg-blue-100 border-l-4 border-blue-600 p-6 rounded-xl mb-10 shadow">
       <h2 class="text-2xl font-semibold text-blue-900 mb-2">📌 오늘의 요약</h2>
       <p class="text-gray-700 text-lg leading-relaxed">
@@ -40,101 +95,107 @@
       </p>
     </section>
 
-    <!-- 날씨 카드 -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-      <div class="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-blue-400">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-xl font-bold text-blue-700">🌦️ 날씨 정보</h3>
-          <button class="text-sm text-blue-600 hover:underline">AI 요약</button>
+    <!-- 메인 카드 영역 -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- 왼쪽: 날씨 + 경제 -->
+      <div class="flex flex-col gap-6">
+        <div class="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-blue-400">
+          <h3 class="text-xl font-bold text-blue-700 mb-4">🌦️ 날씨 정보</h3>
+          <p class="text-5xl font-semibold mb-4">18°C</p>
+          <div class="grid grid-cols-2 gap-2 text-base mb-2">
+            <div>🌡️ 습도: 80%</div>
+            <div>🌬️ 풍향: 북동</div>
+            <div>💨 풍속: 3.5m/s</div>
+            <div>🌧️ 강수확률: 60%</div>
+          </div>
+          <p class="text-red-600 text-sm font-semibold mb-4">⚠️ 강풍주의보</p>
+          <button class="mt-2 text-sm text-blue-600 hover:underline">AI 요약</button>
         </div>
-        <p class="text-3xl font-semibold mb-3">18°C</p>
-        <ul class="text-base space-y-1">
-          <li>🌡️ 습도: 80%</li>
-          <li>💨 풍속: 3.5m/s</li>
-          <li>🌬️ 풍향: 북동</li>
-          <li>🌧️ 강수확률: 60%</li>
-        </ul>
-        <p class="mt-3 text-red-600 text-sm font-semibold">⚠️ 강풍주의보</p>
-      </div>
 
-      <!-- 경제 카드 -->
-      <div class="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-green-400">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-xl font-bold text-green-700">💰 경제 지표</h3>
-          <button class="text-sm text-green-600 hover:underline">AI 요약</button>
+        <div class="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-green-400">
+          <h3 class="text-xl font-bold text-green-700 mb-4">💰 경제 지표</h3>
+          <ul class="text-base space-y-2">
+            <li class="flex justify-between"><span>💱 USD/KRW</span><span class="text-red-600 font-bold">₩1,467.60 ▲ 3.2</span></li>
+            <li class="flex justify-between"><span>📊 기준금리</span><span class="text-blue-600 font-bold">3.50%</span></li>
+            <li class="flex justify-between"><span>🧾 소비자물가지수</span><span class="text-red-500 font-bold">+2.8%</span></li>
+          </ul>
         </div>
-        <ul class="text-lg space-y-3">
-          <li class="flex justify-between">
-            <span>💱 USD/KRW</span>
-            <span class="text-red-600 font-bold">₩1,467.60 ▲ 3.2</span>
-          </li>
-          <li class="flex justify-between">
-            <span>📊 기준금리</span>
-            <span class="text-blue-600 font-bold">3.50%</span>
-          </li>
-          <li class="flex justify-between">
-            <span>🧾 소비자물가지수</span>
-            <span class="text-red-500 font-bold">+2.8%</span>
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- 뉴스 카테고리 -->
-    <div class="flex gap-3 mb-6 flex-wrap">
-      <button onclick="filterCategory('전체')" class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-medium hover:bg-blue-200">전체</button>
-      <button class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-medium hover:bg-blue-200">정치</button>
-      <button class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-medium hover:bg-blue-200">경제</button>
-      <button class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-medium hover:bg-blue-200">사회</button>
-      <button class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-medium hover:bg-blue-200">연예</button>
-      <button class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-medium hover:bg-blue-200">스포츠</button>
-    </div>
-
-    <!-- 뉴스 카드 여러 개 -->
-    <script>
-      function filterCategory(category) {
-        const cards = document.querySelectorAll('[data-category]');
-        cards.forEach(card => {
-          if (category === '전체' || card.dataset.category === category) {
-            card.style.display = 'block';
-          } else {
-            card.style.display = 'none';
-          }
-        });
-      }
-    </script>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- 뉴스 카드 예시 -->
-      <div class="bg-white rounded-2xl shadow-md p-6 border-l-4 border-indigo-400" data-category="정치">
-        <h3 class="text-lg font-bold text-indigo-700 mb-2">📰 기준금리 동결…물가 안정 유지</h3>
-        <p class="text-sm text-gray-700">한국은행은 기준금리를 3.5%로 유지한다고 밝혔습니다.</p>
-        <p class="text-xs text-gray-500 mt-2">출처: 연합뉴스 | 신뢰도: ★★★★☆</p>
       </div>
 
-      <div class="bg-white rounded-2xl shadow-md p-6 border-l-4 border-indigo-400" data-category="경제">
-        <h3 class="text-lg font-bold text-indigo-700 mb-2">📰 소비자물가 2.8% 상승</h3>
-        <p class="text-sm text-gray-700">통계청에 따르면 5월 소비자물가지수는 전년 대비 2.8% 상승했습니다.</p>
-        <p class="text-xs text-gray-500 mt-2">출처: 통계청 | 신뢰도: ★★★★☆</p>
-      </div>
+      <!-- 오른쪽: 뉴스 영역 -->
+      <section class="lg:col-span-2 bg-white rounded-2xl shadow-md p-6">
+        <div class="flex flex-wrap gap-3 mb-6" id="category-buttons">
+          <button onclick="filterCategory(this, '전체')" class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200">전체</button>
+          <button onclick="filterCategory(this, '정치')" class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200">정치</button>
+          <button onclick="filterCategory(this, '경제')" class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200">경제</button>
+          <button onclick="filterCategory(this, '사회')" class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200">사회</button>
+          <button onclick="filterCategory(this, '연예')" class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200">연예</button>
+          <button onclick="filterCategory(this, '스포츠')" class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200">스포츠</button>
+        </div>
 
-      <div class="bg-white rounded-2xl shadow-md p-6 border-l-4 border-indigo-400" data-category="사회">
-        <h3 class="text-lg font-bold text-indigo-700 mb-2">📰 환율 상승세 지속</h3>
-        <p class="text-sm text-gray-700">미국의 금리 인상 가능성으로 인해 환율이 다시 상승하고 있습니다.</p>
-        <p class="text-xs text-gray-500 mt-2">출처: 경제신문 | 신뢰도: ★★★★☆</p>
-      </div>
-
-      <div class="bg-white rounded-2xl shadow-md p-6 border-l-4 border-indigo-400" data-category="연예">
-        <h3 class="text-lg font-bold text-indigo-700 mb-2">📰 국제유가 하락</h3>
-        <p class="text-sm text-gray-700">WTI 기준 국제유가는 전일 대비 1.2% 하락하며 82달러 선에서 마감했습니다.</p>
-        <p class="text-xs text-gray-500 mt-2">출처: 에너지뉴스 | 신뢰도: ★★★☆☆</p>
-      </div>
+        <div class="flex flex-col gap-6" id="news-list">
+          <div class="bg-white rounded-xl shadow p-5 border-l-4 border-indigo-400 cursor-pointer" data-category="정치"
+            onclick="showModal('정치 개혁 법안 통과', '정당 구조 개편을 위한 정치 개혁 법안이 국회에서 통과되었습니다.', '★★★★☆', '#')">
+            <h3 class="text-lg font-bold text-indigo-700 mb-2">📰 정치 개혁 법안 통과</h3>
+            <p class="text-base text-gray-700">정당 구조 개편을 골자로 하는 정치 개혁 법안이 오늘 국회에서 통과되었습니다.</p>
+          </div>
+          <div class="bg-white rounded-xl shadow p-5 border-l-4 border-indigo-400 cursor-pointer" data-category="경제"
+            onclick="showModal('소비자물가 2.8% 상승', '5월 소비자물가지수는 전년 대비 2.8% 상승했습니다.', '★★★★☆', '#')">
+            <h3 class="text-lg font-bold text-indigo-700 mb-2">📊 소비자물가 2.8% 상승</h3>
+            <p class="text-base text-gray-700">5월 소비자물가지수는 전년 대비 2.8% 상승했습니다.</p>
+          </div>
+          <div class="bg-white rounded-xl shadow p-5 border-l-4 border-indigo-400 cursor-pointer" data-category="사회"
+            onclick="showModal('대중교통 요금 인상', '서울시는 7월부터 대중교통 기본 요금을 150원 인상한다고 발표했습니다.', '★★★☆☆', '#')">
+            <h3 class="text-lg font-bold text-indigo-700 mb-2">🚇 대중교통 요금 인상</h3>
+            <p class="text-base text-gray-700">서울시는 7월부터 대중교통 기본 요금을 150원 인상한다고 발표했습니다.</p>
+          </div>
+          <div class="bg-white rounded-xl shadow p-5 border-l-4 border-indigo-400 cursor-pointer" data-category="연예"
+            onclick="showModal('톱스타 결혼 발표', '국민 배우 A씨가 공식 입장을 통해 결혼 소식을 전했습니다.', '★★★☆☆', '#')">
+            <h3 class="text-lg font-bold text-indigo-700 mb-2">🎬 톱스타 결혼 발표</h3>
+            <p class="text-base text-gray-700">배우 A씨가 오늘 팬카페를 통해 결혼 소식을 직접 전했습니다.</p>
+          </div>
+          <div class="bg-white rounded-xl shadow p-5 border-l-4 border-indigo-400 cursor-pointer" data-category="스포츠"
+            onclick="showModal('야구 대표팀 승리', '한국 야구 대표팀이 일본과의 경기에서 5:2로 승리했습니다.', '★★★★★', '#')">
+            <h3 class="text-lg font-bold text-indigo-700 mb-2">⚾ 야구 대표팀 승리</h3>
+            <p class="text-base text-gray-700">한국 야구 대표팀이 일본과의 경기에서 5:2로 승리했습니다.</p>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 
-  <!-- 접근성 설정 (하단 고정) -->
-  <div class="accessibility-bar">
-    <button class="px-3 py-1 bg-yellow-500 text-white rounded-md">글자 작게</button>
-    <button class="px-3 py-1 bg-yellow-600 text-white rounded-md">글자 크게</button>
-  </div>
+  <div id="news-modal" class="modal-overlay">
+    <div class="modal-content">
+      <span class="close-button" onclick="closeModal()">닫기</span>
+      <h3 id="modal-title" class="text-xl font-bold text-blue-800 mb-2"></h3>
+      <p id="modal-summary" class="text-gray-700 mb-3"></p>
+      <p id="modal-reliability" class="text-sm text-gray-500 mb-3"></p>
+      <a id="modal-link" href="#" target="_blank" class="text-blue-600 hover:underline text-sm block mb-4">원문 보기</a>
+      </div>
+    </div>
+    }
+  ]
+}
+
+  <script>
+    function changeFontSize(delta) {
+      const html = document.querySelector("html");
+      const current = parseFloat(getComputedStyle(html).fontSize);
+      html.style.fontSize = (current + delta) + "px";
+    }
+
+    function toggleContrast() {
+      document.body.classList.toggle("high-contrast");
+    }
+
+    function toggleSettings() {
+      const menu = document.getElementById("settings-menu");
+      menu.style.display = menu.style.display === "block" ? "none" : "block";
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") closeModal();
+    });
+  </script>
 </body>
 </html>
